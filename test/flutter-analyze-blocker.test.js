@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert');
+const fs=require('fs');
+const engine=fs.readFileSync('mobile/lib/models/engine_contracts.dart','utf8');
+const err=fs.readFileSync('mobile/lib/widgets/error_view.dart','utf8');
+const pub=fs.readFileSync('mobile/pubspec.yaml','utf8');
+const api=fs.readFileSync('mobile/lib/api.dart','utf8');
+assert(!engine.includes('static String _videoId('),'unused _videoId must not return');
+assert(err.includes("import 'package:elforma/theme.dart';"),'lib imports must use package URI');
+assert(/version:\s*1\.0\.16\+66/.test(pub),'pubspec version drift');
+assert(api.includes("kAppVersionName = '1.0.16'")&&api.includes('kAppBuild = 66'),'api version drift');
+console.log('flutter analyze blockers: 4 passed, 0 failed');
