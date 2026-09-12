@@ -1,0 +1,30 @@
+# [PULSE] منبه نبض مجاني للتطبيق — بدون أي خدمة مراقبة خارجية.
+# GitHub بتنده على /api/health كل شوية:
+#   1) لو الموقع وقع أو بيرد بخطأ → الـ workflow بيفشل → GitHub بتبعتلك إيميل فورًا.
+#   2) كخيار ثانوي: الطنّين الدوري بيخلي نسخة Render المجانية صاحية في حدود
+#      حصتك المجانية (750 ساعة/شهر — التشغيل الدائم ~720 ساعة، يعني بتسيب مجال).
+# مفيش أي خطر على التطبيق: الملف ده بيشتغل في CI فقط ومابيلمسش كود التشغيل.
+name: نبض الفورمة (فحص السلامة)
+on:
+  schedule:
+    # أقل من نافذة نوم Render (15 دقيقة خمول) عشان يفضل صاحي قدر الإمكان.
+    # ملحوظة: توقيت GitHub للمهام المجدولة تقريبي — ممكن يتأخر دقائق.
+    - cron: '*/14 * * * *'
+  workflow_dispatch:  # تقدر تشغله يدوي من تاب Actions في أي وقت
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: فحص /api/health مع إعادة محاولة (أول طلب بعد النوم بياخد وقت)
+        run: |
+          for i in 1 2; do
+            code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 120 https://elforma.onrender.com/api/health || true)
+            echo "محاولة $i → HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "رد السيرفر:"; cat /tmp/health.json; exit 0
+            fi
+            sleep 20
+          done
+          echo "❌ التطبيق مش بيرد 200 بعد محاولتين — افحص Render"
+          exit 1

@@ -1,0 +1,63 @@
+# Free Render web service + remote Turso. Set the Turso credentials and a stable
+# EF_SECRET in Render; outgoing mail additionally requires a configured provider.
+services:
+  - type: web
+    name: elforma
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: EF_ENV
+        value: production
+      - key: EF_TRUST_PROXY
+        value: "1"
+      # [FIX-DEPLOY-SQLITE] node:sqlite لسه experimental على Node 22،
+      # فلو أمر التشغيل اتغير من اللوحة يفضل الفلاج موجود.
+      - key: NODE_OPTIONS
+        value: --experimental-sqlite
+      # [ADMIN] إيميل الأدمن اللي ليه أكسس لوحة التحكم.
+      - key: EF_ADMIN_EMAILS
+        value: mokholaif7@gmail.com
+      # Only temporary files live here. Use remote Turso for durable records.
+      - key: EF_DATA_DIR
+        value: /tmp/elforma
+      # [FIX WalConflict] الاتصال بـTurso مباشر (مفيش نسخة محلية = مفيش WAL محلي
+      # = مفيش WalConflict). حوّلها لـ replica بس لو عندك قرص دائم فعلًا.
+      - key: EF_DATABASE_ENGINE
+        value: turso
+      - key: EF_REQUIRE_DURABLE_DB
+        value: "1"
+      # [PHASE-0-HOTFIX] خليها remote — متحاولش تغيّرها لـ replica من اللوحة.
+      # جربنا replica (9 سبتمبر): المزامنة الأولى بتفشل بـ WalConflict لأن
+      # القاعدة اتكتب عليها شهور بوضع remote المباشر، فتوليد الـ WAL على
+      # الـ primary بيرفض ريبليكا جديدة. الكود في database-adapter.js بقى
+      # فيه حماية: لو اتفعلت replica بالغلط وفشلت، السيرفر يرجع remote
+      # لوحده بدون ما الـ deploy يقع. الرجوع للريبليكا محتاج قاعدة Turso
+      # جديدة (dump/restore) — خطوة منفصلة مدروسة، مش دلوقتي.
+      - key: EF_TURSO_MODE
+        value: remote
+      - key: TURSO_DATABASE_URL
+        sync: false
+      - key: TURSO_AUTH_TOKEN
+        sync: false
+      - key: EF_SECRET
+        sync: false
+      # Set EF_SECRET once in Render and retain it across redeploys.
+      # Free Render storage is ephemeral; Turso stores account/plan data.
+      # Optional: the outgoing mail transport for verification and password
+      # reset emails. Until these are set, emails are written to the outbox on
+      # disk instead of being delivered; nothing else breaks.
+      - key: EF_MAIL_API_URL
+        sync: false
+      - key: EF_MAIL_API_KEY
+        sync: false
+      - key: EF_MAIL_FROM
+        sync: false
+      # Optional one-time owner activation from the browser. Set a long random
+      # value in Render, use it once on /login.html, then delete the variable.
+      - key: EF_ADMIN_SETUP_TOKEN
+        sync: false
+
+  # No paid cron/disk. /tmp is ephemeral. Use Turso's backup/export facilities
+  # for database recovery; do not rely on local Render files as a backup.

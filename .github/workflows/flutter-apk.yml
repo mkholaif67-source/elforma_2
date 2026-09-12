@@ -1,0 +1,104 @@
+name: بناء تطبيق الفورمة الأصلي
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v5
+      # المشروع محتاج Node 22+ (بيستخدم node:sqlite المدمج). من غير الخطوة دي
+      # الـ runner بيستخدم نسخة أقدم وخطوة الاختبارات تحت بتفشل.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: اختبار عقود محركات التغذية والتمرين
+        working-directory: .
+        run: node test/admin-media-flow-124.test.js && node test/nutrition-variety-124.test.js && node test/mobile-gzip-flow.test.js && npm test && npm run test:contracts && npm run test:mobile-nutrition && npm run test:mobile-workout && npm run test:mobile-progress && npm run test:mobile-privacy && npm run test:mobile-adaptive && npm run test:parity && npm run test:push
+      - name: التحقق من مشروع Android المرفق
+        run: python3 tools/verify_android_project.py
+      - name: توليد كتالوج فيديوهات التمارين المحلي (من المصدر الوحيد)
+        working-directory: .
+        # بيولّد mobile/assets/catalog/exercise_videos.json من app/workout/engine/db.js
+        # عشان النسخة المحلية تفضل دايمًا مطابقة للمصدر الوحيد — مافيش تخمين.
+        run: node scripts/build-video-catalog.js
+      - name: تجهيز وتأمين إعدادات أندرويد (مصدر موحّد)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          python3 tools/harden_android.py
+          python3 tools/configure_firebase.py
+          # [FIX التقرير — CI] كان فيه "rm -rf test" هنا، يعني كل اختبارات Flutter
+          # بتتمسح قبل ما تتشغّل أصلاً. المطلوب مسح ملف القالب اللي
+          # flutter create بيولده بس (widget_test.dart) مش اختباراتنا الحقيقية.
+          rm -f test/widget_test.dart
+      - name: توليد أيقونة التطبيق على شاشة الهاتف (لولاها تظهر أيقونة Flutter الافتراضية)
+        run: |
+          flutter pub get
+          dart run flutter_launcher_icons
+      - name: توقيع الإصدار بمفتاح الرفع (يتخطّى تلقائيًا لو المفاتيح غير مضبوطة)
+        run: python3 tools/apply_release_signing.py
+      - name: طباعة بصمة SHA-1 بتاعة شهادة التوقيع (محتاجاها جوجل لدخول Google)
+        # البصمة معلومة عامة مش سر — هي مجرد «بصمة إبهام» للشهادة، وده اللي
+        # جوجل بتحتاجه في OAuth client. بنطبعها هنا عشان تنسخها من اللوج على
+        # طول بدون ما تحتاج تثبت أي أداة على جهازك.
+        run: |
+          set -e
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then echo "(الـ keystore مش متظبط — الخطوة اتخطّت)"; exit 0; fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > /tmp/ef-release.keystore
+          echo "===== بصمات شهادة التوقيع (انسخ سطر SHA1 لجوجل) ====="
+          keytool -list -v -keystore /tmp/ef-release.keystore -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" 2>/dev/null | grep -E "SHA1:|SHA-256:" || echo "(تعذر حساب البصمة)"
+          rm -f /tmp/ef-release.keystore
+      - name: تفعيل desugaring المطلوب للتنبيهات
+        run: python3 tools/patch_android_build.py
+      - name: جلب الاعتماديات
+        run: flutter pub get
+      - name: فحص الكود
+        # [FIX التقرير — CI] شيلنا --no-fatal-warnings. الـ warnings في Dart دي
+        # أخطاء حقيقية محتملة (null safety، متغيرات مش مستخدمة، مقارنات
+        # مستحيلة). فضلنا مستبقين --no-fatal-infos عشان ملاحظات الأسلوب
+        # (deprecated_member_use وخلافه) ماتوقفش الإصدار.
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos > analyze.log 2>&1
+          ANALYZE_EXIT=$?
+          set -e
+          echo "===== ERRORS (build-breaking) ====="
+          grep -E "error [•-]" analyze.log || echo "(none)"
+          echo "===== WARNINGS (build-breaking) ====="
+          grep -E "warning [•-]" analyze.log | head -40 || echo "(none)"
+          echo "===== SUMMARY ====="
+          tail -3 analyze.log
+          if [ "$ANALYZE_EXIT" -ne 0 ]; then
+            echo "::error::فيه أخطاء أو تحذيرات برمجية فوق — لازم تتصلح قبل البناء"
+            exit 1
+          fi
+          echo "✓ مفيش أخطاء ولا تحذيرات — التحليل نجح"
+      - name: اختبارات Flutter (كانت بتتمسح قبل ما تتشغل)
+        # [FIX التقرير — CI] mobile/test/ فيه اختبارات حقيقية ماكانتش بتتشغل خالص.
+        run: flutter test
+      - name: بناء APK
+        # [GOOGLE-AUD] السر بيعدي وقت البناء بس؛ لو مش متعين في الأسرار بيتبني
+        # بقيمة فاضية والتطبيق يرجع للسلوك القديم من غير ما البناء يقع.
+        run: flutter build apk --release --dart-define=GOOGLE_WEB_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: elforma-native-android-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error

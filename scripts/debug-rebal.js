@@ -1,0 +1,11 @@
+'use strict';
+const n=require('../lib/nutrition-engine-host');
+const res=n.computeMealPlan({gender:'female',age:26,height:165,weight:70,target:62,activity:1.375,goal:'lose',selectedDiet:'balanced',mealCount:3},{});
+const p=res.plan;
+console.log('rebalanceError=',p.rebalanceError);
+console.log('sanitizeError=',p.sanitizeError);
+console.log('rulesError=',p.rulesError);
+console.log('ownerPostError=',p.ownerPostError);
+const day=p.meals.reduce((s,m)=>s+(m.totals&&m.totals.cals||0),0);
+p.meals.forEach(m=>console.log((m.slotKey||m.label),'=',m.totals&&m.totals.cals,'('+Math.round((m.totals.cals/day)*100)+'%)','pre='+!!m._autoPreWorkout));
+console.log('day=',day);
