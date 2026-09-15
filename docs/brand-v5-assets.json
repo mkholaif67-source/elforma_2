@@ -1,0 +1,93 @@
+[
+  {
+    "file": "athlete.png",
+    "width": 697,
+    "height": 1036,
+    "mode": "RGBA",
+    "sha256": "8fb49f2a9860cd81f0789fda4b4e8523ae9bd58d890d9ee693534d604f68eb9f"
+  },
+  {
+    "file": "avocado.png",
+    "width": 179,
+    "height": 188,
+    "mode": "RGBA",
+    "sha256": "e788b58ca1997e301b7a77edc319aad3fbe684319b7aa9361376fd86ebaaad20"
+  },
+  {
+    "file": "backdrop.webp",
+    "width": 941,
+    "height": 1672,
+    "mode": "RGB",
+    "sha256": "ea01f76dfeaf5e94d0f7ad4d15d7d69520528a3c55bddef28ce8b0447c0a9e3f"
+  },
+  {
+    "file": "bowl.png",
+    "width": 1100,
+    "height": 881,
+    "mode": "RGBA",
+    "sha256": "0d22deb7ce873644fd2714cd419b2e60c19218f0f1f17ed42bdc4759a84777dd"
+  },
+  {
+    "file": "dumbbell.png",
+    "width": 1000,
+    "height": 599,
+    "mode": "RGBA",
+    "sha256": "7405f4bd3e14f4f58a6bbbc041dfc4ce99e3658cf65610ede5a963b61eb073af"
+  },
+  {
+    "file": "intro_bowl.png",
+    "width": 622,
+    "height": 435,
+    "mode": "RGBA",
+    "sha256": "522b5e0172a49346847ad039caa49b3d0bb27e7d1ca9a9137f8f7424fc280bb5"
+  },
+  {
+    "file": "intro_dumbbell.png",
+    "width": 540,
+    "height": 408,
+    "mode": "RGBA",
+    "sha256": "179fb9b3f4dc3ef3b7a4f4955c0c1b7ab7f09b299052d3fc4e37c19c694105b2"
+  },
+  {
+    "file": "leaf.png",
+    "width": 212,
+    "height": 201,
+    "mode": "RGBA",
+    "sha256": "e78ecd0b1420b2bc5770d763a2528e661b62290d36f51d61eab84778a26569c4"
+  },
+  {
+    "file": "logo.png",
+    "width": 614,
+    "height": 372,
+    "mode": "RGBA",
+    "sha256": "9a9c105f0278777ddea6f671bff399facb32ef4b791856c3345ea6f9a9d826aa"
+  },
+  {
+    "file": "shaker.png",
+    "width": 381,
+    "height": 673,
+    "mode": "RGBA",
+    "sha256": "68875e507352148905b10553858f09e5a0543eb3af9ff37d5498f0f4b01b9dbc"
+  },
+  {
+    "file": "sprout.png",
+    "width": 489,
+    "height": 353,
+    "mode": "RGBA",
+    "sha256": "a042247ccceec4cdd72cca99e7b7d0e9f791dcf351c2d82858a343f6a17955b5"
+  },
+  {
+    "file": "stones.png",
+    "width": 884,
+    "height": 763,
+    "mode": "RGBA",
+    "sha256": "91c69a1eebc8e8cee0005e888d54787ee0762d12c4c58b3d5c28512d0f2ce92b"
+  },
+  {
+    "file": "tomato.png",
+    "width": 116,
+    "height": 136,
+    "mode": "RGBA",
+    "sha256": "62422cd669c8c82713e19fedc2ec4677b1784054631538485db111e289a2c98f"
+  }
+]

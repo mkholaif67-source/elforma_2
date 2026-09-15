@@ -1,0 +1,17 @@
+'use strict';
+const assert=require('node:assert/strict'),h=require('../lib/nutrition-engine-host'),b=require('../lib/mobile-nutrition-bridge'),fs=require('node:fs');
+const p={gender:'male',age:30,height:180,weight:75,targetWeight:70,goal:'lose',dailyActivity:'light',diet:'balanced',mealCount:3,trainingDays:0};
+const c=b.buildEngineContext(p,{}),baseline=h.computeMealPlan(c.profile,c.inputs);
+const empty=h.computeMealPlan(c.profile,{...c.inputs,mealFavorites:{breakfast:[],snack:[],main:[]}});assert.deepEqual(empty,baseline);
+const favored=h.computeMealPlan(c.profile,{...c.inputs,mealFavorites:{breakfast:['jbn_rwds'],snack:[],main:[]}});
+assert.deepEqual(favored.targets,baseline.targets);
+assert(favored.plan.meals.find(m=>m.slotKey==='breakfast').foods.some(f=>f.food.id==='jbn_rwds'));
+for(const m of favored.plan.meals.filter(m=>m.slotKey!=='breakfast'))assert(!m.foods.some(f=>f.food.id==='jbn_rwds'));
+const impossible=h.computeMealPlan(c.profile,{...c.inputs,mealFavorites:{breakfast:['not-a-food'],snack:[],main:[]}});assert.deepEqual(impossible,baseline);
+const wo=fs.readFileSync(__dirname+'/../mobile/lib/screens/workout_screen.dart','utf8');
+const gate=wo.slice(wo.indexOf('Widget _gatedBody()'),wo.indexOf('Widget _setupCta()'));
+assert(!gate.includes('_buildForm('));assert(wo.includes("Tab(text: 'جدولك التدريبي')"));
+const meal=fs.readFileSync(__dirname+'/../mobile/lib/screens/meal_plan_screen.dart','utf8');
+assert(meal.includes("'نظامك الغذائي'"));assert(!meal.includes("return 'بكرة'"));assert(!meal.includes('coreOffsets'));
+assert(meal.includes('dayOffset: _dayOffset, force: force'));
+console.log('PASS: optional per-meal favorites, default parity, safe fallback, same target, no legacy-form route, today-first navigation');

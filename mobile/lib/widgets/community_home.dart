@@ -1,0 +1,393 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:elforma/api.dart';
+import 'package:elforma/theme.dart';
+import 'package:elforma/screens/community_screen.dart';
+import 'package:elforma/screens/steps_screen.dart';
+import 'package:elforma/widgets/forma_design.dart';
+
+class CommunityHome extends StatefulWidget {
+  const CommunityHome({super.key});
+  @override
+  State<CommunityHome> createState() => _CommunityHomeState();
+}
+
+class _CommunityHomeState extends State<CommunityHome>
+    with WidgetsBindingObserver {
+  List<Map<String, dynamic>> recipes = [], challenges = [];
+  Timer? contentTimer, stepTimer;
+  bool contentLoading = false, stepsLoading = false;
+  int? stepCount;
+  int stepGoal = 6000;
+  String stepLabel = 'تابع حركتك وهدفك';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(refreshSteps());
+    unawaited(refreshContent(Api.I.accountId));
+    // المحتوى الشبكي لا يحتاج polling كل 10 ثوان؛ ده كان يبطئ الرئيسية ويستهلك البيانات.
+    contentTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted && TickerMode.of(context) && ModalRoute.of(context)?.isCurrent == true &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        unawaited(refreshContent(Api.I.accountId));
+      }
+    });
+    // الخطوات محلية بالكامل ولا تنتظر الشبكة.
+    // كل 10 ثوان كان بيعمل setState على الرئيسية 6 مرات في الدقيقة بدون داعي.
+    stepTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted && TickerMode.of(context) && ModalRoute.of(context)?.isCurrent == true &&
+          WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        unawaited(refreshSteps());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    contentTimer?.cancel();
+    stepTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState s) {
+    if (s == AppLifecycleState.resumed) {
+      unawaited(refreshSteps());
+      unawaited(refreshContent(Api.I.accountId));
+    }
+  }
+
+  Future<void> load() async {
+    final owner = Api.I.accountId;
+    await refreshSteps();
+    await refreshContent(owner);
+  }
+
+  Future<void> refreshContent(String? owner) async {
+    if (contentLoading) return;
+    contentLoading = true;
+    try {
+      final r = await Api.I.community();
+      if (mounted && r.ok && owner == Api.I.accountId) {
+        setState(() {
+          recipes = communityRows(r.data['recipes']);
+          challenges = communityRows(r.data['challenges']);
+        });
+      }
+    } finally {
+      contentLoading = false;
+    }
+  }
+
+  Future<void> refreshSteps() async {
+    if (!Platform.isAndroid || stepsLoading) return;
+    stepsLoading = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final r =
+          await const MethodChannel(
+            'elforma/steps',
+          ).invokeMapMethod<String, dynamic>('readLocal') ??
+          {};
+      final days = (r['days'] as List? ?? []).whereType<Map>().toList();
+      final count = days.isEmpty ? null : days.last['count'];
+      if (mounted) {
+        setState(() {
+          stepGoal = prefs.getInt('steps_goal:${Api.I.accountId}') ?? 6000;
+          stepCount = r['status'] == 'ready' && count is num
+              ? count.round()
+              : null;
+          stepLabel = stepCount == null
+              ? 'اضغط لتفعيل عداد الحركة'
+              : stepCount == 0
+              ? 'ابدأ أول خطواتك النهاردة'
+              : 'من هدفك اليومي $stepGoal خطوة';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          stepCount = null;
+          stepLabel = 'افتح لتحديث خطواتك';
+        });
+      }
+    } finally {
+      stepsLoading = false;
+    }
+  }
+
+  Future<void> open(Widget page) async {
+    await Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+    if (mounted) await load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activeChallenges = challenges
+        .where((e) => e['joined'] == true && e['ended'] != true)
+        .toList();
+    return FormaReveal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 22),
+          const Text(
+            'يومك أحسن بخطوة',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          _stepsCard(),
+          const SizedBox(height: 12),
+          _challengeCard(activeChallenges),
+          const SizedBox(height: 12),
+          _kitchenCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _stepsCard() {
+    final count = stepCount;
+    final progress = count == null || stepGoal <= 0
+        ? 0.0
+        : (count / stepGoal).clamp(0, 1).toDouble();
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () => open(const StepsScreen()),
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(17),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: FormaDecoration(
+                      color: AppColors.nu.withValues(alpha: .11),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const FormaIcon(
+                      Icons.directions_walk_rounded,
+                      size: 29,
+                      color: AppColors.nu,
+                    ),
+                  ),
+                  const SizedBox(width: 13),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'خطوات اليوم',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          stepLabel,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: AppColors.muted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    count == null ? '—' : '$count',
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(
+                      color: AppColors.nu,
+                      fontSize: 25,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+
+                ],
+              ),
+              const SizedBox(height: 13),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 7,
+                  backgroundColor: AppColors.bg2,
+                  color: AppColors.nu,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _challengeCard(List<Map<String, dynamic>> active) {
+    final current = active.isEmpty ? null : active.first;
+    final mine = current?['mine'] as Map? ?? {};
+    final progress = (mine['progress'] as num? ?? 0).round().clamp(0, 100);
+    final count = active.length;
+    final subtitle = count == 0
+        ? 'ابدأ تحديا جديدا'
+        : count == 1
+            ? '${current?['title'] ?? 'تحديك الحالي'}'
+            : 'لديك $count تحديات نشطة اضغط لعرضها وإضافة المزيد';
+    return Card(
+      margin: EdgeInsets.zero,
+      child: InkWell(
+        // افتح القائمة دائما حتى يقدر المستخدم يدير أكثر من تحد واحد.
+        onTap: () => open(const CommunityScreen()),
+        borderRadius: BorderRadius.circular(24),
+        child: Padding(
+          padding: const EdgeInsets.all(17),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: FormaDecoration(
+                  color: AppColors.wo2.withValues(alpha: .11),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const FormaIcon(Icons.flag_rounded, size: 28, color: AppColors.wo2),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      count == 0 ? 'تحدياتي' : count == 1 ? 'تحدي نشط' : '$count تحديات نشطة',
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11.5, color: AppColors.muted),
+                    ),
+                  ],
+                ),
+              ),
+              if (count == 1)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: FormaDecoration(
+                    color: AppColors.wo2.withValues(alpha: .12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '$progress٪',
+                    textDirection: TextDirection.ltr,
+                    style: const TextStyle(color: AppColors.wo2, fontWeight: FontWeight.w900),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _kitchenCard() {
+    final hasRecipe = recipes.isNotEmpty;
+    final title = hasRecipe
+        ? '${recipes.first['title'] ?? 'وصفة اليوم'}'
+        : 'وصفات صحية بطعم تحبه';
+    final destination = hasRecipe
+        ? RecipeScreen(item: recipes.first)
+        : const CommunityScreen(recipes: true);
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => open(destination),
+        child: SizedBox(
+          height: 148,
+          child: Row(
+            children: [
+              Expanded(
+                flex: 7,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(18, 16, 14, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Row(
+                        children: [
+                          FormaIcon(
+                            Icons.restaurant_menu_rounded,
+                            color: AppColors.nu,
+                            size: 20,
+                          ),
+                          SizedBox(width: 7),
+                          Text(
+                            'من مطبخ الفورمة',
+                            style: TextStyle(
+                              color: AppColors.nu,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 9),
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          height: 1.35,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      const Text(
+                        'اكتشف الوصفات وطريقة التحضير ←',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: AppColors.muted,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: SizedBox.expand(
+                  child: Image.asset(
+                    'assets/community/kitchen_hero.webp',
+                    fit: BoxFit.cover,
+                    // الصورة جزء من كارت ومابتاخدش عرض الشاشة كله، فمفيش داعي
+                    // نفك الصورة بمقاسها الأصلي في الذاكرة.
+                    cacheWidth: 600,
+                    alignment: Alignment.centerLeft,
+                    excludeFromSemantics: true,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

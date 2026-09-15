@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const html=fs.readFileSync(require.resolve('../public/admin.html'),'utf8');
+const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+for(const s of scripts)if(/\bsrc=/.test(s[1]))assert.equal(s[2].trim(),'','external script tags must not swallow inline handlers');
+const source=scripts.find(s=>s[2].includes('let COMMUNITY='))[2];
+const elements=new Map();
+const element=id=>{if(!elements.has(id))elements.set(id,{value:'',checked:false,disabled:false,style:{},textContent:'',children:[],append(x){this.children.push(x);},replaceChildren(){this.children=[];},reset(){},showModal(){this.open=true;},close(){this.open=false;}});return elements.get(id);};
+let writes=[];
+const ctx={console,Intl,Date,document:{createElement:()=>({style:{},append(){}})},$:element,toast:()=>{},GET:async()=>({ok:true,data:{items:[]}}),POST:async(route,body)=>{writes.push({route,body});return {ok:true,data:{item:{id:'saved-id'},delivery:{sent:0}}};}};
+vm.createContext(ctx);vm.runInContext(source,ctx);
+(async()=>{
+  await ctx.loadCommunity();assert.equal(element('community-list').children.length,4);
+  ctx.editCommunity('recipe',{title:'وصفة',ingredients:['أ','ب'],preparation:['ج'],published:true});
+  assert.equal(element('cm-title').value,'وصفة');assert.equal(element('cm-ingredients').value,'أ\nب');assert.equal(element('cm-challenge-fields').style.display,'none');
+  element('cm-notify').checked=false;
+  await ctx.saveCommunity();assert.equal(writes.length,1);assert.equal(writes[0].route,'/api/admin/community/recipes');
+  ctx.editCommunity('challenge',{title:'تحدي',published:true});element('cm-notify').checked=true;
+  await ctx.saveCommunity();assert.equal(writes[1].route,'/api/admin/community/challenges');assert.equal(writes[2].route,'/api/admin/notifications/send');assert.equal(writes[2].body.link,'elforma://challenge/saved-id');
+  assert.equal(element('cm-notify').checked,false);assert.equal(element('cm-save').disabled,false);
+  console.log('Admin community script loading, editing, saving and opt-in notification checks passed');
+})().catch(e=>{console.error(e);process.exitCode=1;});
