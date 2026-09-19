@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- HTTPS only. The backend (elforma.onrender.com) and every asset URL
+     are TLS, so plaintext HTTP is forbidden app-wide. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

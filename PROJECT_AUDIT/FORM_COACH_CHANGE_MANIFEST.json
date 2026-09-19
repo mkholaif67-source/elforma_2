@@ -1,0 +1,31 @@
+{
+  "changed": [
+    "mobile/lib/features/form_coach/domain/assessment.dart",
+    "mobile/lib/features/form_coach/domain/form_coach_engine.dart",
+    "mobile/lib/features/form_coach/domain/pose_quality_gate.dart",
+    "mobile/lib/features/form_coach/domain/rep_cycle.dart",
+    "mobile/lib/features/form_coach/profiles/catalog_form_profiles.dart",
+    "mobile/lib/features/form_coach/profiles/fallback_form_engine.dart",
+    "mobile/lib/features/form_coach/runtime/camera_pose_pipeline.dart",
+    "mobile/lib/features/form_coach/runtime/form_coach_controller.dart",
+    "mobile/lib/features/form_coach/runtime/form_cue_player.dart",
+    "mobile/lib/features/form_coach/ui/form_coach_screen.dart",
+    "mobile/lib/features/form_coach/ui/widgets/cue_banner.dart",
+    "mobile/lib/features/form_coach/ui/widgets/readiness_panel.dart",
+    "mobile/test/form_coach_pipeline_test.dart",
+    "mobile/test/form_coach_rep_cycle_test.dart",
+    "test/form-coach-performance-contract.test.js",
+    "test/form-coach-phase1-contract.test.js"
+  ],
+  "added": [
+    "PROJECT_AUDIT/FORM_COACH_STABILIZATION.md",
+    "mobile/tool/form_coach_regression.dart",
+    "mobile/test/form_coach_stabilization_test.dart"
+  ],
+  "removed": [
+    "mobile/.idea/caches/deviceStreaming.xml",
+    "mobile/.idea/deviceManager.xml",
+    "mobile/.idea/workspace.xml"
+  ],
+  "original_database_sha256": "30b2f61e47136cb91fd0e6aed9b8b51b723206d14573ca58a6d418106e110d16"
+}

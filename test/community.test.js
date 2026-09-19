@@ -1,0 +1,28 @@
+'use strict';
+const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
+process.env.EF_DATA_DIR=fs.mkdtempSync(path.join(os.tmpdir(),'ef-community-'));
+process.env.EF_DATABASE_ENGINE='sqlite';
+const db=require('../lib/db');const c=require('../lib/community');
+const sql=db.db;
+const now=new Date().toISOString();
+for(const id of [1,2,3,4])sql.prepare('INSERT INTO users(id,email,name,pass_hash,pass_salt,verified,created_at) VALUES(?,?,?,?,?,?,?)').run(id,`c${id}@example.test`,`Tester ${id}`,'x','y',1,now);
+const today=c.today({team:true});
+const base={title:'مشي يومي',description:'عشر دقائق',duration:7,start:today,published:true,weekdays:[0,1,2,3,4,5,6]};
+let checks=0;function test(name,f){f();checks++;console.log('PASS',name);}
+let personal,team;
+test('personal challenge scoped to owner',()=>{personal=c.saveChallenge({...base,offsetMinutes:180},1);assert.equal(c.list(2).length,0);assert.throws(()=>c.detail(personal.id,2),/غير متاح/);assert.throws(()=>c.remove(personal.id,2));});
+test('idempotent daily check and reversible current day',()=>{const pday=c.today({...personal,offsetMinutes:180});const at=new Date(pday+'T12:00:00Z');c.check(personal.id,1,true,at);const r=c.check(personal.id,1,true,at);assert.equal(r.mine.completed,1);assert.equal(r.mine.progress,14);assert.equal(c.check(personal.id,1,false,at).mine.completed,0);});
+test('reject future/out-of-period checks',()=>{assert.throws(()=>c.check(personal.id,1,true,new Date(Date.parse(today)+10*86400000)));});
+test('team is public and requires join',()=>{team=c.saveChallenge(base,1,true);assert.ok(c.list(2).some(r=>r.id===team.id));assert.throws(()=>c.check(team.id,2,true),/انضم/);});
+test('join duplicates do not inflate participant count',()=>{c.join(team.id,2,'المتدرب');c.join(team.id,2,'ثان');assert.equal(c.detail(team.id,2).participantCount,1);});
+test('daily score and leaderboard contain only display names',()=>{c.join(team.id,3,'سارة');c.check(team.id,3,true);const r=c.detail(team.id,2);assert.equal(r.leaders[0].displayName,'سارة');assert.equal(r.leaders[0].consistency,100);assert.equal(r.leaders[0].user_id,undefined);assert.equal(r.leaders[0].email,undefined);});
+test('team rules frozen after participants join',()=>{assert.throws(()=>c.saveChallenge({...base,id:team.id,duration:10},1,true),/ثابتة/);assert.throws(()=>c.saveChallenge({...base,id:team.id,type:'water'},1,true));});
+test('admin cannot overwrite personal challenge',()=>assert.throws(()=>c.saveChallenge({...base,id:personal.id},1,true),/غير مسموح/));
+test('ordinary user cannot overwrite team challenge',()=>assert.throws(()=>c.saveChallenge({...base,id:team.id},2),/غير مسموح/));
+test('draft recipe excluded; complete published recipe returned',()=>{const recipe=c.saveRecipe({title:'زبادي',ingredients:['زبادي 170 جم'],preparation:['قدم باردًا'],calories:110,published:false});assert.equal(c.recipes().length,0);c.saveRecipe({...recipe,published:true});assert.equal(c.recipes()[0].calories,110);});
+test('recipe validation refuses unsafe URL and empty details',()=>{assert.throws(()=>c.recipeInput({title:'X',image:'javascript:alert(1)'}));assert.throws(()=>c.recipeInput({title:'X'}));});
+test('date and weekday validation',()=>{assert.throws(()=>c.challengeInput({...base,start:'2026-02-30'},true));assert.throws(()=>c.challengeInput({...base,weekdays:[8]},true));assert.throws(()=>c.challengeInput({...base,duration:-1},true));});
+test('hidden team becomes unavailable',()=>{c.saveChallenge({...base,id:team.id,published:false},1,true);assert.throws(()=>c.detail(team.id,2),/غير متاح/);assert.ok(!c.list(2).some(r=>r.id===team.id));});
+test('account deletion cascades private challenges and team participation',()=>{sql.prepare('DELETE FROM users WHERE id=?').run(1);assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM forma_challenges WHERE owner_id=1').get().n,0);sql.prepare('DELETE FROM users WHERE id=?').run(3);assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM forma_challenge_days WHERE user_id=3').get().n,0);});
+console.log(`${checks} community domain checks passed`);
+db.db.close();fs.rmSync(process.env.EF_DATA_DIR,{recursive:true,force:true});
