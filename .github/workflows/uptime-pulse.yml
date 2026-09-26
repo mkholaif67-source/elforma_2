@@ -1,0 +1,21 @@
+# فحص اختياري يدوي؛ لا يعمل تلقائيًا ولا يغير بيانات التطبيق.
+name: نبض الفورمة (فحص السلامة)
+on:
+  workflow_dispatch:  # تقدر تشغله يدوي من تاب Actions في أي وقت
+
+jobs:
+  pulse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: فحص /api/health مع إعادة محاولة (أول طلب بعد النوم بياخد وقت)
+        run: |
+          for i in 1 2; do
+            code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 120 https://elforma.onrender.com/api/health || true)
+            echo "محاولة $i → HTTP $code"
+            if [ "$code" = "200" ]; then
+              echo "رد السيرفر:"; cat /tmp/health.json; exit 0
+            fi
+            sleep 20
+          done
+          echo "❌ التطبيق مش بيرد 200 بعد محاولتين — افحص Render"
+          exit 1

@@ -1,0 +1,17 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const workout = require('../api/workout');
+const bounds = require('../lib/body-bounds');
+const guide = require('../lib/engine-error-guide');
+assert.equal(workout.cleanProfile({profile:{days:0}}).days, 2, 'first-version workout day clamping must stay unchanged');
+assert.equal(workout.cleanProfile({profile:{days:4}}).days, 4, 'normal workout days must not change');
+assert.equal(bounds.validateBody({age:300,height:181,weight:80}).code, 'engine_implausible_age');
+assert.ok(guide.GUIDE.engine_implausible_age);
+const auth = fs.readFileSync(require.resolve('../api/auth'), 'utf8');
+assert.match(auth, /logout[\s\S]*token_version = token_version \+ 1/);
+const api = fs.readFileSync(require.resolve('../mobile/lib/api.dart'), 'utf8');
+assert.match(api, /Duration\(days: 7\)/);
+assert.match(api, /data\['stale'\]/);
+assert.doesNotMatch(api, /sp\.remove\(oldQueue\)/);
+console.log('master repair regression contracts passed');

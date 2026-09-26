@@ -1,0 +1,38 @@
+# [BACKUP-DRIVE] نسخة احتياطية يومية خارجية: Turso → ملف .sql.gz → Google Drive.
+# بتشتغل في CI فقط (مابتلمسش السيرفر) — وبتكمل حلقة الحماية:
+# الداتا الحية على Turso (بعيدة عن Render) + نسخة يومية على Drive بتاعك (بعيدة عن الاتنين).
+name: نسخة درايف اليومية
+on:
+  schedule:
+    - cron: '17 3 * * *'   # يوميًا ~5:17 صباحًا بتوقيت مصر تقريبًا
+  workflow_dispatch:       # وتقدر تشغّلها يدوي من تاب Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: تثبيت أداة Turso الرسمية
+        run: |
+          curl -sSfL https://get.tur.so/install.sh | bash
+          echo "$HOME/.turso" >> "$GITHUB_PATH"
+
+      - name: تفريغ قاعدة البيانات كاملة (SQL مضغوط)
+        env:
+          TURSO_API_TOKEN: ${{ secrets.TURSO_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          OUT="/tmp/elforma-$(date +%F).sql.gz"
+          turso db shell "${{ secrets.TURSO_DB_NAME }}" ".dump" | gzip -9 > "$OUT"
+          # حارس سلامة: النسخة الفاضية أو المكسورة ماتترفعش وكأنها سليمة
+          SIZE=$(stat -c%s "$OUT")
+          echo "حجم النسخة: $SIZE بايت"
+          [ "$SIZE" -gt 2000 ] || { echo "❌ النسخة صغيرة بشكل مش منطقي — إلغاء"; exit 1; }
+          echo "OUT_FILE=$OUT" >> "$GITHUB_ENV"
+
+      - name: الرفع إلى Google Drive
+        env:
+          GCP_SA_JSON: ${{ secrets.GCP_SA_JSON }}
+          DRIVE_FOLDER_ID: ${{ secrets.DRIVE_FOLDER_ID }}
+        run: node scripts/backup-to-drive.js "$OUT_FILE"

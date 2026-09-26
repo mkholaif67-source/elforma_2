@@ -1,0 +1,38 @@
+[
+  {
+    "test": "form-coach-audit-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-catalog-coverage.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-dart-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-fallback-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-latency-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-performance-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-phase1-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-recording-contract.test.js",
+    "exit": 0
+  }
+]

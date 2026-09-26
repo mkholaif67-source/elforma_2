@@ -1,0 +1,358 @@
+[
+  {
+    "test": "admin-app-integration.test.js",
+    "exit": 0
+  },
+  {
+    "test": "admin-app-path.test.js",
+    "exit": 0
+  },
+  {
+    "test": "admin-browser-setup.test.js",
+    "exit": 0
+  },
+  {
+    "test": "admin-community.test.js",
+    "exit": 0
+  },
+  {
+    "test": "admin-media-flow-124.test.js",
+    "exit": 0
+  },
+  {
+    "test": "admin-videos.test.js",
+    "exit": 0
+  },
+  {
+    "test": "advanced-minimum-122.test.js",
+    "exit": 0
+  },
+  {
+    "test": "age-policy.test.js",
+    "exit": 0
+  },
+  {
+    "test": "api.test.js",
+    "exit": 0
+  },
+  {
+    "test": "app-version-gate.test.js",
+    "exit": 0
+  },
+  {
+    "test": "audit-112.test.js",
+    "exit": 0
+  },
+  {
+    "test": "brand-experience-v5.test.js",
+    "exit": 0
+  },
+  {
+    "test": "ci-config.test.js",
+    "exit": 0
+  },
+  {
+    "test": "community-api.test.js",
+    "exit": 0
+  },
+  {
+    "test": "community.test.js",
+    "exit": 0
+  },
+  {
+    "test": "current-day-consistency-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "dart-queue-write.test.js",
+    "exit": 0
+  },
+  {
+    "test": "deploy-sqlite.test.js",
+    "exit": 0
+  },
+  {
+    "test": "edge-cases.test.js",
+    "exit": 0
+  },
+  {
+    "test": "encoding-integrity.test.js",
+    "exit": 0
+  },
+  {
+    "test": "engine-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "engine-isolation.test.js",
+    "exit": 0
+  },
+  {
+    "test": "final-owner-rules-v2.test.js",
+    "exit": 0
+  },
+  {
+    "test": "flutter-analyze-blocker.test.js",
+    "exit": 0
+  },
+  {
+    "test": "flutter-ci-warning-regression.test.js",
+    "exit": 0
+  },
+  {
+    "test": "food-photo-catalog.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-audit-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-catalog-coverage.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-dart-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-fallback-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-latency-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-performance-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-phase1-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "form-coach-recording-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "gender-translation-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "health-adjustments.test.js",
+    "exit": 0
+  },
+  {
+    "test": "loading-contract-122.test.js",
+    "exit": 0
+  },
+  {
+    "test": "master-repair-regression.test.js",
+    "exit": 0
+  },
+  {
+    "test": "meal-favorites-125.test.js",
+    "exit": 0
+  },
+  {
+    "test": "meal-variety.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-adaptive.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-gzip-flow.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-modules-endpoint.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-nutrition.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-privacy.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-progress.test.js",
+    "exit": 0
+  },
+  {
+    "test": "mobile-workout.test.js",
+    "exit": 0
+  },
+  {
+    "test": "nutrition-integration.test.js",
+    "exit": 0
+  },
+  {
+    "test": "nutrition-mealcap.test.js",
+    "exit": 0
+  },
+  {
+    "test": "nutrition-rules.test.js",
+    "exit": 0
+  },
+  {
+    "test": "nutrition-variety-124.test.js",
+    "exit": 0
+  },
+  {
+    "test": "owner-review-115.test.js",
+    "exit": 0
+  },
+  {
+    "test": "owner-rules.test.js",
+    "exit": 0
+  },
+  {
+    "test": "owner-video-links-125.test.js",
+    "exit": 0
+  },
+  {
+    "test": "parity.test.js",
+    "exit": 0
+  },
+  {
+    "test": "performance-116.test.js",
+    "exit": 0
+  },
+  {
+    "test": "persistence.test.js",
+    "exit": 0
+  },
+  {
+    "test": "phase23.test.js",
+    "exit": 0
+  },
+  {
+    "test": "plan-inflight-dedupe.test.js",
+    "exit": 0
+  },
+  {
+    "test": "plans-prepare.test.js",
+    "exit": 0
+  },
+  {
+    "test": "plateau-diagnostics.test.js",
+    "exit": 0
+  },
+  {
+    "test": "post-audit-hardening.test.js",
+    "exit": 0
+  },
+  {
+    "test": "preworkout-meal.test.js",
+    "exit": 0
+  },
+  {
+    "test": "profile-continuity-122.test.js",
+    "exit": 0
+  },
+  {
+    "test": "profile-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "progress-story.test.js",
+    "exit": 0
+  },
+  {
+    "test": "push-devices.test.js",
+    "exit": 0
+  },
+  {
+    "test": "release-hygiene.test.js",
+    "exit": 0
+  },
+  {
+    "test": "requested-meal-pairing.test.js",
+    "exit": 0
+  },
+  {
+    "test": "requested-root-regressions.test.js",
+    "exit": 0
+  },
+  {
+    "test": "rest-variety-flow.test.js",
+    "exit": 0
+  },
+  {
+    "test": "root-review-125.test.js",
+    "exit": 0
+  },
+  {
+    "test": "scale-security.test.js",
+    "exit": 0
+  },
+  {
+    "test": "scaling-foundation.test.js",
+    "exit": 0
+  },
+  {
+    "test": "security.test.js",
+    "exit": 0
+  },
+  {
+    "test": "serving-policy-125.test.js",
+    "exit": 0
+  },
+  {
+    "test": "smart-coach-toggle.test.js",
+    "exit": 0
+  },
+  {
+    "test": "soup-protein-pairing.test.js",
+    "exit": 0
+  },
+  {
+    "test": "steps-background-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "stitch-redesign-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "translation-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "ui-accessibility-contract.test.js",
+    "exit": 0
+  },
+  {
+    "test": "video-integrity.test.js",
+    "exit": 0
+  },
+  {
+    "test": "weak-vocab-normalize.test.js",
+    "exit": 0
+  },
+  {
+    "test": "workout-gate.test.js",
+    "exit": 0
+  },
+  {
+    "test": "workout-history-analysis.test.js",
+    "exit": 0
+  },
+  {
+    "test": "workout-modules.test.js",
+    "exit": 0
+  },
+  {
+    "test": "workout-start-schedule.test.js",
+    "exit": 0
+  }
+]

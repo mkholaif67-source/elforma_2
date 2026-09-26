@@ -1,0 +1,34 @@
+New files
+- api/friend-challenges.js
+- lib/friend-challenges.js
+- mobile/lib/screens/friend_challenges_screen.dart
+- test/friend-challenges.test.js
+- test/friend-challenges-api.test.js
+- test/friend-challenges-mobile-contract.test.js
+- PRIVATE_FRIEND_CHALLENGES_RELEASE_AR.md
+- PRIVATE_FRIEND_CHALLENGES_CHANGED_FILES.txt
+- mobile/lib/widgets/monthly_wrap_up_card.dart
+- test/monthly-wrap-up.test.js
+- test/mobile-workout.test.js
+- NEW_USER_FIRST_WORKOUT_RELEASE_AR.md
+- MONTHLY_PROGRESS_RECAP_RELEASE_AR.md
+
+Updated files
+- .env.example
+- api/account.js
+- lib/persistence/migrations.js
+- lib/progress-events.js
+- lib/workout-schedule.js
+- mobile/android/app/src/main/AndroidManifest.xml
+- mobile/android/app/src/main/kotlin/com/elforma/elforma/MainActivity.kt
+- mobile/lib/api.dart
+- mobile/lib/community_links.dart
+- mobile/lib/screens/community_screen.dart
+- mobile/lib/screens/progress_screen.dart
+- mobile/lib/screens/shell_screen.dart
+- package.json
+- package-lock.json
+- mobile/pubspec.yaml
+- server.js
+
+Existing task 1 launcher icon changes remain included in the delivered project.

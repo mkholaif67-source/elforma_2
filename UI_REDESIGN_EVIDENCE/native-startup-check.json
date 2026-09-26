@@ -1,0 +1,12 @@
+{
+  "resource_variants": {
+    "values": "white only, no logo",
+    "values-night": "white only, no logo",
+    "values-v31": "transparent vector, white startup and handoff",
+    "values-night-v31": "transparent vector, white startup and handoff"
+  },
+  "unchanged_flutter_backend_and_launcher_files": 193,
+  "device_or_emulator_run": false,
+  "apk_built": false,
+  "limitation": "Android SDK and Flutter SDK are not installed in the current environment; native resource validation only."
+}
